@@ -31,30 +31,29 @@ impl<T: SmartHomeStorage> House<T> {
     ) -> Result<Vec<String>, SmartHomeError> {
         match self.rooms.get(room_name) {
             Some(devices) => Ok(devices.clone()),
-            None => Result::Err(SmartHomeError {
-                text: format!("This house does not contain a room named '{}'", room_name),
-            }),
+            None => Err(SmartHomeError::NotFound(format!(
+                "This house does not contain a room named '{}'",
+                room_name
+            ))),
         }
     }
 
     pub fn add_room(&mut self, room_name: &str) -> Result<(), SmartHomeError> {
         //ensure unique
         if self.rooms.contains_key(room_name) {
-            return Result::Err(SmartHomeError {
-                text: format!("This house alredy contains a room named '{}'", room_name),
-            });
+            return Result::Err(SmartHomeError::NotUnique(format!(
+                "This house alredy contains a room named '{}'",
+                room_name
+            )));
         }
 
         //try commit
-        match self.storage.add_room(&self.name, room_name) {
-            Ok(_) => {
-                self.rooms.insert(room_name.to_string(), Vec::new());
-                Ok(())
-            }
-            Err(_) => Err(SmartHomeError {
-                text: "Storage returned an error while adding a room".to_string(),
-            }),
-        }
+        self.storage
+            .add_room(&String::from(self.name()), room_name)?;
+
+        self.rooms.insert(room_name.into(), Vec::new());
+
+        Ok(())
     }
 
     pub fn add_device(&mut self, room_name: &str, device_name: &str) -> Result<(), SmartHomeError> {
@@ -62,34 +61,30 @@ impl<T: SmartHomeStorage> House<T> {
         match self.rooms.get(room_name) {
             Some(devices) => {
                 if devices.contains(&device_name.to_string()) {
-                    return Result::Err(SmartHomeError {
-                        text: format!(
-                            "The room '{}' of this house alredy contains device named '{}'",
-                            room_name, device_name
-                        ),
-                    });
+                    return Err(SmartHomeError::NotUnique(format!(
+                        "The room '{}' of this house alredy contains device named '{}'",
+                        room_name, device_name
+                    )));
                 }
             }
             None => {
-                return Result::Err(SmartHomeError {
-                    text: format!("This house does not contain a room named '{}'", room_name),
-                })
+                return Err(SmartHomeError::NotFound(format!(
+                    "This house does not contain a room named '{}'",
+                    room_name
+                )))
             }
         };
 
         //try commit
-        match self.storage.add_device(&self.name, room_name, device_name) {
-            Ok(_) => {
-                self.rooms
-                    .get_mut(room_name)
-                    .unwrap()
-                    .push(device_name.to_string());
-                Ok(())
-            }
-            Err(_) => Result::Err(SmartHomeError {
-                text: "Storage returned an error while adding a device".to_string(),
-            }),
-        }
+        self.storage
+            .add_device(&String::from(self.name()), room_name, device_name)?;
+
+        self.rooms
+            .get_mut(room_name)
+            .unwrap()
+            .push(device_name.to_string());
+
+        Ok(())
     }
 
     pub fn get_report(&self) -> Result<String, SmartHomeError> {
@@ -99,15 +94,18 @@ impl<T: SmartHomeStorage> House<T> {
             report.push_str(&format!("\troom '{}'\r\n", room_name));
 
             for device_name in devices {
-                if let Ok(device_status) =
-                    self.storage
-                        .get_device_status(&self.name, room_name, device_name)
+                match self
+                    .storage
+                    .get_device_status(self.name(), room_name, device_name)
                 {
-                    report.push_str(&format!("\t\tdevice '{}': ", device_name));
-                    report.push_str(&device_status);
-                    report.push_str("\n\r");
-                } else {
-                    return Result::Err( SmartHomeError{text: format!("Storage returned an error while getting status of device '{}' in room '{}'", device_name, room_name)} );
+                    Ok(device_status) => {
+                        report.push_str(&format!("\t\tdevice '{}': ", device_name));
+                        report.push_str(&device_status);
+                        report.push_str("\n\r");
+                    }
+                    Err(e) => {
+                        return Err(e.into());
+                    }
                 }
             }
         }
