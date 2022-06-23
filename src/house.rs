@@ -103,9 +103,13 @@ impl<T: SmartHomeStorage> House<T> {
         Ok(())
     }
 
-    pub fn remove_device(&mut self, room_name: &str, device_name: &str) -> Result<(), SmartHomeError> {
+    pub fn remove_device(
+        &mut self,
+        room_name: &str,
+        device_name: &str,
+    ) -> Result<(), SmartHomeError> {
         let devices = match self.rooms.get_mut(room_name) {
-            Some(devices) => { devices }
+            Some(devices) => devices,
             None => {
                 return Err(SmartHomeError::NotFound(format!(
                     "This house does not contains a room named {}",
@@ -117,8 +121,7 @@ impl<T: SmartHomeStorage> House<T> {
         if !devices.remove(device_name) {
             return Err(SmartHomeError::NotFound(format!(
                 "The room named {} does not contain device named {}",
-                room_name,
-                device_name
+                room_name, device_name
             )));
         }
 
