@@ -1,11 +1,11 @@
 use crate::errors::SmartHomeError;
 use crate::storage::SmartHomeStorage;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct House<T: SmartHomeStorage> {
     name: String,
     storage: T,
-    rooms: HashMap<String, Vec<String>>,
+    rooms: HashMap<String, HashSet<String>>,
 }
 
 impl<T: SmartHomeStorage> House<T> {
@@ -30,7 +30,7 @@ impl<T: SmartHomeStorage> House<T> {
         room_name: &str,
     ) -> Result<Vec<String>, SmartHomeError> {
         match self.rooms.get(room_name) {
-            Some(devices) => Ok(devices.clone()),
+            Some(devices) => Ok(devices.iter().cloned().collect::<Vec<String>>()),
             None => Err(SmartHomeError::NotFound(format!(
                 "This house does not contain a room named '{}'",
                 room_name
@@ -51,16 +51,15 @@ impl<T: SmartHomeStorage> House<T> {
         self.storage
             .add_room(&String::from(self.name()), room_name)?;
 
-        self.rooms.insert(room_name.into(), Vec::new());
+        self.rooms.insert(room_name.into(), HashSet::new());
 
         Ok(())
     }
 
     pub fn add_device(&mut self, room_name: &str, device_name: &str) -> Result<(), SmartHomeError> {
-        //ensure unique
-        match self.rooms.get(room_name) {
+        match self.rooms.get_mut(room_name) {
             Some(devices) => {
-                if devices.contains(&device_name.to_string()) {
+                if !devices.insert(device_name.into()) {
                     return Err(SmartHomeError::NotUnique(format!(
                         "The room '{}' of this house alredy contains device named '{}'",
                         room_name, device_name
@@ -73,16 +72,12 @@ impl<T: SmartHomeStorage> House<T> {
                     room_name
                 )))
             }
-        };
-
+            
+        }
+        
         //try commit
         self.storage
             .add_device(&String::from(self.name()), room_name, device_name)?;
-
-        self.rooms
-            .get_mut(room_name)
-            .unwrap()
-            .push(device_name.to_string());
 
         Ok(())
     }
@@ -94,19 +89,10 @@ impl<T: SmartHomeStorage> House<T> {
             report.push_str(&format!("\troom '{}'\r\n", room_name));
 
             for device_name in devices {
-                match self
-                    .storage
-                    .get_device_status(self.name(), room_name, device_name)
-                {
-                    Ok(device_status) => {
-                        report.push_str(&format!("\t\tdevice '{}': ", device_name));
-                        report.push_str(&device_status);
-                        report.push_str("\n\r");
-                    }
-                    Err(e) => {
-                        return Err(e.into());
-                    }
-                }
+                let device_status = self.storage.get_device_status(self.name(), room_name, device_name)?;
+                report.push_str(&format!("\t\tdevice '{}': ", device_name));
+                report.push_str(&device_status);
+                report.push_str("\n\r");
             }
         }
 
