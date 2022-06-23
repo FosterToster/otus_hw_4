@@ -56,6 +56,28 @@ impl<T: SmartHomeStorage> House<T> {
         Ok(())
     }
 
+    pub fn remove_room(&mut self, room_name: &str) -> Result<(), SmartHomeError> {
+        if !self.rooms.contains_key(room_name) {
+            return Err(SmartHomeError::NotFound(format!(
+                "This house does not contains a room named '{}'",
+                room_name
+            )));
+        };
+
+        let devices = self.rooms.get(room_name).unwrap();
+
+        if !devices.is_empty() {
+            return Err(SmartHomeError::NotEmpty(format!(
+                "The room named {} is not empty",
+                room_name
+            )));
+        }
+
+        self.rooms.remove(room_name).unwrap();
+
+        Ok(())
+    }
+
     pub fn add_device(&mut self, room_name: &str, device_name: &str) -> Result<(), SmartHomeError> {
         match self.rooms.get_mut(room_name) {
             Some(devices) => {
@@ -77,6 +99,28 @@ impl<T: SmartHomeStorage> House<T> {
         //try commit
         self.storage
             .add_device(&String::from(self.name()), room_name, device_name)?;
+
+        Ok(())
+    }
+
+    pub fn remove_device(&mut self, room_name: &str, device_name: &str) -> Result<(), SmartHomeError> {
+        let devices = match self.rooms.get_mut(room_name) {
+            Some(devices) => { devices }
+            None => {
+                return Err(SmartHomeError::NotFound(format!(
+                    "This house does not contains a room named {}",
+                    room_name
+                )));
+            }
+        };
+
+        if !devices.remove(device_name) {
+            return Err(SmartHomeError::NotFound(format!(
+                "The room named {} does not contain device named {}",
+                room_name,
+                device_name
+            )));
+        }
 
         Ok(())
     }

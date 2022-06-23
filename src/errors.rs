@@ -18,6 +18,7 @@ impl Error for StorageError {}
 pub enum SmartHomeError {
     NotFound(String),
     NotUnique(String),
+    NotEmpty(String),
     StorageError(String),
 }
 
@@ -31,6 +32,9 @@ impl Display for SmartHomeError {
                 write!(f, "Item is not uniqe: {}", text)
             }
             Self::StorageError(text) => {
+                write!(f, "Storage returned an error: {}", text)
+            }
+            Self::NotEmpty(text) => {
                 write!(f, "Storage returned an error: {}", text)
             }
         }
