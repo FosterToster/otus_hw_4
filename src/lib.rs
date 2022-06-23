@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn assigned_devices() {
-        let devices = vec!["First".to_string(), "Second".to_string()];
+        let mut devices = vec!["First".to_string(), "Second".to_string()];
         let room_name = String::from("Main");
         let mut house = House::new("My home".to_string(), DummyStorage {});
 
@@ -114,7 +114,9 @@ mod tests {
             house.add_device(&room_name, device_name).unwrap();
         }
 
-        if let Ok(room_devices) = house.get_room_assigned_devices(&room_name) {
+        if let Ok(mut room_devices) = house.get_room_assigned_devices(&room_name) {
+            room_devices.sort();
+            devices.sort();
             assert_eq!(devices, room_devices)
         } else {
             panic!("room was not addet")
