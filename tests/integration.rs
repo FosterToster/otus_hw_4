@@ -14,7 +14,20 @@ impl SmartHomeStorage for MyStorage {
         Ok(())
     }
 
+    fn remove_device(
+            &mut self,
+            _house: &str,
+            _room_name: &str,
+            _device_name: &str
+        ) -> Result<(), StorageError> {
+        Ok(())
+    }
+
     fn add_room(&mut self, _house: &str, _room_name: &str) -> Result<(), StorageError> {
+        Ok(())
+    }
+
+    fn remove_room(&mut self, _house: &str, _room_name: &str) -> Result<(), StorageError> {
         Ok(())
     }
 
