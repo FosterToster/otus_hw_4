@@ -57,6 +57,15 @@ mod tests {
     }
 
     #[test]
+    fn remove_room() {
+        let mut house = House::new("My home".to_string(), DummyStorage {});
+        house.add_room("Main").unwrap();
+        assert!(!house.get_assigned_rooms().is_empty());
+        house.remove_room("Main").unwrap();
+        assert!(house.get_assigned_rooms().is_empty());
+    }
+
+    #[test]
     #[should_panic]
     fn add_room_unique() {
         let mut house = House::new("My home".to_string(), DummyStorage {});
@@ -72,6 +81,34 @@ mod tests {
         let mut house = House::new("My home".to_string(), DummyStorage {});
         house.add_room("Main").unwrap();
         house.add_device("Main", "Thermometer").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_room_not_empty() {
+        let mut house = House::new("My home".to_string(), DummyStorage {});
+        house.add_room("Main").unwrap();
+        house.add_device("Main", "Socket").unwrap();
+        assert!(!house.get_assigned_rooms().is_empty());
+        house.remove_room("Main").unwrap();
+    }
+
+    #[test]
+    fn remove_device() {
+        let mut house = House::new("My home".to_string(), DummyStorage {});
+        house.add_room("Main").unwrap();
+        house.add_device("Main", "Socket").unwrap();
+        house.remove_device("Main", "Socket").unwrap();
+        assert!(house.get_room_assigned_devices("Main").unwrap().is_empty());
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_device_not_found() {
+        let mut house = House::new("My home".to_string(), DummyStorage {});
+        house.add_room("Main").unwrap();
+        house.add_device("Main", "Socket").unwrap();
+        house.remove_device("Main", "NotSocket").unwrap();
     }
 
     #[test]
