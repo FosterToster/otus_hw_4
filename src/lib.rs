@@ -32,11 +32,11 @@ mod tests {
         }
 
         fn remove_device(
-                &mut self,
-                _house: &str,
-                _room_name: &str,
-                _device_name: &str
-            ) -> Result<(), StorageError> {
+            &mut self,
+            _house: &str,
+            _room_name: &str,
+            _device_name: &str,
+        ) -> Result<(), StorageError> {
             Ok(())
         }
 

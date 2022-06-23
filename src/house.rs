@@ -72,9 +72,8 @@ impl<T: SmartHomeStorage> House<T> {
                     room_name
                 )))
             }
-            
         }
-        
+
         //try commit
         self.storage
             .add_device(&String::from(self.name()), room_name, device_name)?;
@@ -89,7 +88,9 @@ impl<T: SmartHomeStorage> House<T> {
             report.push_str(&format!("\troom '{}'\r\n", room_name));
 
             for device_name in devices {
-                let device_status = self.storage.get_device_status(self.name(), room_name, device_name)?;
+                let device_status =
+                    self.storage
+                        .get_device_status(self.name(), room_name, device_name)?;
                 report.push_str(&format!("\t\tdevice '{}': ", device_name));
                 report.push_str(&device_status);
                 report.push_str("\n\r");

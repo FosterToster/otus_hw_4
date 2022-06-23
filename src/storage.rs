@@ -13,7 +13,7 @@ pub trait SmartHomeStorage {
         &mut self,
         house: &str,
         room_name: &str,
-        device_name: &str
+        device_name: &str,
     ) -> Result<(), StorageError>;
     fn get_device_status(
         &self,
