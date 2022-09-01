@@ -1,6 +1,7 @@
 use crate::errors::SmartHomeError;
 use crate::storage::SmartHomeStorage;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write;
 
 pub struct House<T: SmartHomeStorage> {
     name: String,
@@ -132,15 +133,13 @@ impl<T: SmartHomeStorage> House<T> {
         let mut report = format!("Full report for house '{}'\n\r", self.name());
 
         for (room_name, devices) in self.rooms.iter() {
-            report.push_str(&format!("\troom '{}'\r\n", room_name));
-
+            write!(report, "\troom '{}'\r\n", room_name)?;
+            
             for device_name in devices {
                 let device_status =
                     self.storage
                         .get_device_status(self.name(), room_name, device_name)?;
-                report.push_str(&format!("\t\tdevice '{}': ", device_name));
-                report.push_str(&device_status);
-                report.push_str("\n\r");
+                write!(report, "\t\tdevice '{}': {}\n\r", device_name, device_status)?;
             }
         }
 

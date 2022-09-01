@@ -11,6 +11,9 @@ pub enum SmartHomeError {
     #[error("Not found: {0}")]
     NotFound(String),
 
+    #[error("Format Error: {0}")]
+    FMTError(#[from] std::fmt::Error),
+
     #[error("Not unique: {0}")]
     NotUnique(String),
 
