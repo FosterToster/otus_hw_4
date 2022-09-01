@@ -1,4 +1,4 @@
-use homework_3::{House, SmartHomeStorage, StorageError};
+use smart_home::{House, SmartHomeStorage, StorageError};
 
 // Define your own storage for devices in your house
 struct MyStorage {}
